@@ -1,0 +1,10 @@
+# MounRiver Studio build output
+/obj/
+
+# Local IDE metadata
+/.mrs/
+/.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
