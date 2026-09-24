@@ -34,5 +34,6 @@ void TFT_init(void);
 void TFT_setWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void TFT_writePixels(const uint16_t *pixels, uint32_t count);
 void TFT_fillColor(uint16_t color);
+void TFT_writePixelsDMA(const void *data, uint16_t byte_count);
 
 #endif

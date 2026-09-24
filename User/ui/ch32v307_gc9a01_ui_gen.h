@@ -76,7 +76,9 @@ bool ch32v307_gc9a01_ui_check_target(uint32_t target);
  * Fonts
  *----------------*/
 
-
+/* Targets: any */
+extern lv_font_t * font_data_10;
+extern lv_font_t * font_data_12;
 
 
 /*----------------

@@ -143,6 +143,18 @@ void USART_Printf_Init(uint32_t baudrate)
     USART_Cmd(USART3, ENABLE);
 
 #endif
+    printf(
+        "RESET: raw=%08lx PIN=%d POR=%d SW=%d IWDG=%d WWDG=%d LPWR=%d\r\n",
+        RCC->RSTSCKR,
+        RCC_GetFlagStatus(RCC_FLAG_PINRST),
+        RCC_GetFlagStatus(RCC_FLAG_PORRST),
+        RCC_GetFlagStatus(RCC_FLAG_SFTRST),
+        RCC_GetFlagStatus(RCC_FLAG_IWDGRST),
+        RCC_GetFlagStatus(RCC_FLAG_WWDGRST),
+        RCC_GetFlagStatus(RCC_FLAG_LPWRRST)
+    );
+
+    RCC_ClearFlag();
 }
 
 /*********************************************************************

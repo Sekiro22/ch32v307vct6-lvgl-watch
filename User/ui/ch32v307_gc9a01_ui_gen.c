@@ -57,7 +57,10 @@ static uint32_t ch32v307_gc9a01_ui_target = CH32V307_GC9A01_UI_TARGET_ALL;
  * Fonts
  *----------------*/
 
-
+lv_font_t * font_data_10;
+extern lv_font_t font_data_10_data;
+lv_font_t * font_data_12;
+extern lv_font_t font_data_12_data;
 
 /*----------------
  * Images
@@ -99,8 +102,24 @@ void ch32v307_gc9a01_ui_init_gen(const char * asset_path)
      * Fonts
      *----------------*/
 
+    /* Targets: any */
 
+    #if CH32V307_GC9A01_UI_CHECK_COMPILE_TARGET(CH32V307_GC9A01_UI_TARGET_ALL)
+    if (ch32v307_gc9a01_ui_check_target(CH32V307_GC9A01_UI_TARGET_ALL)) {
+        if (!font_data_10) {
+            /* font_data_10 */
+            /* get font 'font_data_10' from a C array */
+            font_data_10 = &font_data_10_data;
 
+        }
+        if (!font_data_12) {
+            /* font_data_12 */
+            /* get font 'font_data_12' from a C array */
+            font_data_12 = &font_data_12_data;
+
+        }
+    }
+    #endif
 
     /*----------------
      * Images
@@ -127,8 +146,14 @@ void ch32v307_gc9a01_ui_init_gen(const char * asset_path)
 #if defined(LV_USE_XML) && LV_USE_XML
     /* Register widgets */
 
+    /* Check all fonts / default if needed. This prevents fonts that are used in one target but
+       defined in another from causing assertion failures during rendering of the Preview. */
+    check_font(&font_data_10, "font_data_10");
+    check_font(&font_data_12, "font_data_12");
 
     /* Register fonts */
+    lv_xml_register_font(NULL, "font_data_10", font_data_10);
+    lv_xml_register_font(NULL, "font_data_12", font_data_12);
 
     /* Register subjects */
 

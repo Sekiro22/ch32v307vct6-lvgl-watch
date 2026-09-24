@@ -21,11 +21,13 @@
 #include "TFT.h"
 #include "ui_thread.h"
 
+void DMA1_Channel3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+
 void system_init(void)
 {
     TFT_init();
 
-	xTaskCreate(ui_thread, "UI_Thread", 1024, NULL, configMAX_PRIORITIES - 4, &ui_taskhandle);
+	xTaskCreate(ui_thread, "UI_Thread", 2048, NULL, configMAX_PRIORITIES - 4, &ui_taskhandle);
 }
 
 /*********************************************************************
@@ -54,5 +56,19 @@ int main(void)
 	while(1)
 	{
 	    printf("shouldn't run at here!!\n");
+	}
+}
+
+void DMA1_Channel3_IRQHandler(void)
+{
+	if(DMA_GetITStatus(DMA1_IT_TC3) == SET)
+	{
+		DMA_ClearITPendingBit(DMA1_IT_TC3);
+		DMA_Cmd(DMA1_Channel3, DISABLE);
+
+		while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
+
+		TFT_CS_HIGH();
+		ui_flush_complete_from_isr();
 	}
 }
