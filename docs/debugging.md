@@ -42,7 +42,28 @@ GC9A01 的 `MADCTL (0x36)` 当前使用 `0x48`。此前方向值导致文字镜�
 2. Tick 是否以毫秒返回；当前 500 Hz Tick 需要乘 `portTICK_PERIOD_MS`；
 3. RGB565 是否按高字节、低字节发送；
 4. flush 结束后是否调用 `lv_display_flush_ready()`；
-5. LVGL 内部堆是否足够。当前 `LV_MEM_SIZE` 为 16 KB。
+5. LVGL 内部堆是否足够。当前 `LV_MEM_SIZE` 为 32 KB。
+
+### 复杂表盘首次刷新时 HardFault 或反复复位
+
+症状包括旧画面闪烁、启动日志反复出现，或首次进入 `lv_timer_handler()` 后触发 HardFault。曾捕获到两类异常：
+
+```text
+mcause=4，mepc 位于 lv_draw_sw_mask_apply()
+mcause=5，mepc 位于 memcpy()，mtval=0x20010000
+```
+
+根因是 16 KB LVGL 内存池不足。新表盘包含圆角、刻度、圆弧、字体和旋转对象；软件遮罩及变换图层会继续申请 LVGL 内存。内存断言和日志关闭时，申请失败可能表现为描述符损坏、对象不显示或 HardFault，而不是清晰的 OOM 信息。
+
+将 `LV_MEM_SIZE` 从 16 KB 增至 32 KB 后，表盘已在实机稳定刷新。排查同类问题时：
+
+1. 先确认 HardFault 的 `mepc`、`mcause`、`mtval`；
+2. 使用与烧录固件同一次构建的 ELF 和 `addr2line` 反查 `mepc`；
+3. 使用 `lv_mem_monitor()` 检查 `free_size`、`free_biggest_size` 和 `max_used`；
+4. 旋转、缩放对象需要临时图层，普通对象能显示不代表变换图层一定能分配成功；
+5. 调整内存池后重新检查链接 map，确保 64 KB RAM 布局仍有余量。
+
+当前生成代码中的时、分、秒指针旋转值均为 0，因此不再触发旋转图层；后续恢复动态角度时需要再次验证 LVGL 堆峰值。
 
 ### 屏幕固定亮线
 

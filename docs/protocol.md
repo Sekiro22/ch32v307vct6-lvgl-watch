@@ -22,7 +22,7 @@
 - 8 bit 数据；
 - MSB first；
 - CPOL=0、CPHA=0（SPI Mode 0）；
-- SPI1 分频为 8；系统与 APB2 当前配置下约为 18 MHz；
+- SPI1 分频为 2；系统与 APB2 同为 144 MHz，SPI 时钟约 72 MHz，实机验证显示正常；
 - 软件控制 CS。
 
 ### 命令/数据时序
@@ -64,7 +64,7 @@ height = y2 - y1 + 1
 count  = width * height
 ```
 
-发送完成后必须调用 `lv_display_flush_ready(display)`。当前 SPI 为阻塞方式，因此该调用发生在物理发送完成之后。
+发送完成后必须调用 `lv_display_flush_ready(display)`。当前像素写入由 DMA1 Channel 3 搬运：DMA 完成中断在等待 SPI `BSY` 清零并拉高 CS 后，通过 `ui_flush_complete_from_isr()` 调用 `lv_display_flush_ready()`，不能在 flush 回调中提前调用。
 
 ## 调试串口
 

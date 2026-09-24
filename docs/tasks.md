@@ -16,7 +16,7 @@
 
 | 任务 | 创建位置 | 优先级 | 栈深度 | 主要职责 |
 | --- | --- | --- | --- | --- |
-| `UI_Thread` | `system_init()` | `configMAX_PRIORITIES - 4`，即 11 | 1024 个栈元素，约 4 KB | 初始化 LVGL、创建显示/UI、周期处理 LVGL |
+| `UI_Thread` | `system_init()` | `configMAX_PRIORITIES - 4`，即 11 | 2048 个栈元素，约 8 KB | 初始化 LVGL、创建显示/UI、周期处理 LVGL |
 
 FreeRTOS 还会创建 Idle 任务；由于 `configUSE_TIMERS=1`，也会创建 Timer Service 任务，其优先级为 14、栈深度为 256 个栈元素。
 
@@ -25,7 +25,7 @@ FreeRTOS 还会创建 Idle 任务；由于 `configUSE_TIMERS=1`，也会创建 T
 ```text
 初始化 LVGL 和屏幕
   -> lv_timer_handler()
-  -> vTaskDelay(pdMS_TO_TICKS(5))
+  -> vTaskDelay(pdMS_TO_TICKS(2))
   -> 重复
 ```
 
@@ -34,9 +34,10 @@ LVGL Tick 由 `xTaskGetTickCount() * portTICK_PERIOD_MS` 提供，不需要在 S
 ## 共享资源约束
 
 - 当前只有 UI 任务调用 LVGL，因此没有 LVGL Mutex。
-- `TFT_init()` 在调度器启动前完成；运行期显示访问来自 UI 任务。
+- `TFT_init()` 在调度器启动前完成；运行期由 UI 任务启动 SPI DMA，DMA1 Channel 3 中断结束传输并通知 LVGL。
 - LVGL 默认不是线程安全的。未来其他任务不得直接调用 LVGL API，应通过队列/事件把数据交给 UI 任务；如果确需跨任务调用，必须统一加锁。
-- 当前 SPI1 为同步阻塞访问。增加 DMA 后，必须在 DMA 完成中断或完成通知中调用 `lv_display_flush_ready()`，不能像现在一样立即调用。
+- DMA 中断在传输计数完成后继续等待 SPI1 `BSY` 清零，再拉高 CS 并调用 `lv_display_flush_ready()`。
+- 当前 `configCHECK_FOR_STACK_OVERFLOW=0`。UI 栈已临时增至约 8 KB，后续清理调试代码后应测量 high-water mark，再决定是否缩减。
 
 ## 后续任务建议
 
