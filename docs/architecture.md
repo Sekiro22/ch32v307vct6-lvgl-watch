@@ -15,6 +15,8 @@
 | 图形库 | `Middlewares/LVGL/`、`Middlewares/lv_conf.h` | LVGL 9.6 核心、软件渲染和控件 |
 | LVGL 端口 | `User/app/ui_thread.c` | Tick、显示对象、局部缓冲、flush 回调和 LVGL 主循环 |
 | UI | `User/ui/` | LVGL Pro 生成的项目初始化及屏幕创建代码 |
+| 按键 | `Dev/key.c`、`User/app/app_key_event.c` | PE1～PE6 扫描、消抖、按下事件队列及当前串口调试处理 |
+| 时钟 | `User/app/watch_clock.c` | LSI 驱动 RTC 计数；在 UI 任务内用 LVGL Line 绘制并刷新表针 |
 
 ## 启动调用链
 
@@ -30,15 +32,20 @@ Reset
         -> TFT_init()
            -> SPI1/GPIO 初始化
            -> GC9A01 硬件复位与寄存器初始化
+        -> RTC_Init()
+           -> 启动 LSI；仅当后备标记不存在时配置 RTC 并设置初始时间
         -> xTaskCreate(ui_thread, ...)
      -> vTaskStartScheduler()
         -> ui_thread()
+           -> KEY_Init()、创建按键队列
            -> lv_init()
            -> lv_tick_set_cb()
            -> lv_display_create(240, 240)
            -> 注册 RGB565 局部缓冲和 flush 回调
            -> ch32v307_gc9a01_ui_init("")
            -> lv_screen_load(screen_main_create())
+           -> watch_clock_init()：创建 Line 表针及 1 秒 LVGL 定时器
+           -> xTaskCreate(key_event_task, ...)
            -> 周期调用 lv_timer_handler()
 ```
 
@@ -70,7 +77,7 @@ SPI1 当前使用二分频。DMA 完成只表示数据已搬入 SPI，仍需等�
 - FreeRTOS heap_4：12 KB。
 - UI 任务栈：2048 个 `StackType_t`，RV32 下约 8 KB，来自 FreeRTOS 堆。
 - LVGL 绘图缓冲：4800 字节静态数组。
-- 最近构建：`text=232748`、`data=336`、`bss=53112`。
+- 2026-09-27 构建：`text=236896`、`data=384`、`bss=53136`。
 
 内部 Flash 和 RAM 空间均已较紧张。新增资源时优先使用字体子集；大字体和图片后续应存放到 W25Q128，并通过 LVGL 文件系统读取。增加控件或旋转/缩放对象后，需要重新检查 LVGL 堆峰值和最大连续空闲块。
 
@@ -80,10 +87,11 @@ SPI1 当前使用二分频。DMA 完成只表示数据已搬入 SPI，仍需等�
 - `User/ui/ch32v307_gc9a01_ui.c` 是用户扩展入口，生成器只在文件不存在时创建骨架。
 - 驱动、RTOS 和 LVGL 初始化不属于生成 UI，应继续保留在 `Dev/` 与 `User/app/`。
 
-## 当前未实现
+## 当前实现边界
 
-- 触摸或按键输入设备；
+- PE1～PE6 已按 20 ms 周期扫描并发送按下消息，但尚未映射到一级菜单；触摸输入未实现；
+- 表针每秒读取 RTC 计数，当前使用标称 40 kHz 的内部 LSI 和预分频 39999。首次初始化时间仍为代码中的固定值，尚无用户校时入口；LSI 精度及断电保持未验证；
 - 双缓冲；
 - W25Q128 驱动及 LVGL 文件系统；
 - 中文字体资源；
-- 低功耗、RTC、传感器和手表业务功能。
+- 低功耗、传感器和其他手表业务功能。

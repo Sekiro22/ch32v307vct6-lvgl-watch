@@ -20,13 +20,20 @@
 #include "task.h"
 #include "TFT.h"
 #include "ui_thread.h"
+#include "key.h"
+#include "watch_clock.h"
 
 void DMA1_Channel3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 void system_init(void)
 {
     TFT_init();
-
+	if(RTC_Init() == 1)
+	{
+		printf("RTC open error!\n");
+		return;
+	}
+	printf("RTC open seccuss!\n");
 	xTaskCreate(ui_thread, "UI_Thread", 2048, NULL, configMAX_PRIORITIES - 4, &ui_taskhandle);
 }
 

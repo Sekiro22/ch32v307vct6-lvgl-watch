@@ -1,5 +1,6 @@
 {
 	"version": "1.0",
+	"hasAllParsed": true,
 	"isNormalMRSProject": true,
 	"basic": {
 		"chipInfo": {
@@ -9,11 +10,15 @@
 			"rtos": "NoneOS",
 			"mcu": "CH32V307RCT",
 			"description": "ROM(byte): 256K, SRAM(byte): 64K, CHIP PINS: 64, GPIO PORTS: 51.\\nWCH CH32V3 series of mainstream MCUs covers the needs of a large variety of applications in the industrial,medical and consumer markets. High performance with first-class peripherals and low-power,low-voltage operation is paired with a high level of integration at accessible prices with a simple architecture and easy-to-use tools.",
+			"tempratureScope": "",
 			"artifactType": "executable",
 			"link": "WCH-Link",
 			"peripheral_version": "1.4",
 			"calibrateSupport": false,
-			"calibrateCommand": ""
+			"calibrateCommand": "",
+			"UIConfigSupport": false,
+			"UIConfigCommand": "",
+			"externalFlashSupport": false
 		},
 		"linkedFolders": [
 			{
@@ -58,7 +63,10 @@
 				"excludeResources": [
 					"${project}/FreeRTOS/portable/Common/mpu_wrappers.c",
 					"${project}/Startup/startup_ch32v30x_D8.S",
-					"${project}/SRC"
+					"${project}/SRC",
+					"${project}/Middlewares/LVGL/src/debugging/vg_lite_tvg/vg_lite_tvg.cpp",
+					"${project}/Middlewares/LVGL/src/drivers/display/lovyan_gfx/lv_lovyan_gfx.cpp",
+					"${project}/Middlewares/LVGL/src/drivers/display/tft_espi/lv_tft_espi.cpp"
 				],
 				"optimization": {
 					"level": "size",
@@ -78,6 +86,7 @@
 					"code_generation_without_hardware_floating": false,
 					"use_pipelines": false,
 					"show_caret_indicating_the_column": false,
+					"calling_convention_variant": false,
 					"other_optimization_flags": ""
 				},
 				"warnings": {
@@ -308,7 +317,8 @@
 					}
 				},
 				"archiver": {
-					"archiver_flags": "-r"
+					"archiver_flags": "-r",
+					"libOutputPrefix": "lib"
 				},
 				"createFlash": {
 					"enabled": true,
@@ -316,6 +326,7 @@
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
+					"create_algorithm_file": false,
 					"other_flags": ""
 				},
 				"createList": {
@@ -349,6 +360,7 @@
 					"extra_compressed_extension": true,
 					"bit_extension": false,
 					"multiplication_subset_of_the_M_extension": false,
+					"vector_cryptography_extensions": "",
 					"integer_ABI": "ilp32",
 					"floating_point_ABI": "none",
 					"tuning": "default",
@@ -377,6 +389,8 @@
 		"disablepowerout": false,
 		"clearcodeflash": false,
 		"disablecodeprotect": false,
+		"flashType": "",
+		"asmFile_path": "",
 		"exepath": "",
 		"exearguments": ""
 	},

@@ -4,6 +4,9 @@
 #include "debug.h"
 #include "lvgl.h"
 #include "ch32v307_gc9a01_ui.h"
+#include "key.h"
+#include "app_key_event.h"
+#include "watch_clock.h"
 
 #define LVGL_BUFFER_LINES 10
 
@@ -48,11 +51,12 @@ static void lvgl_flush(lv_display_t *display,
 
 void ui_thread(void * ui_arg)
 {
+    KEY_Init();
+    key_queue = xQueueCreate(3, sizeof(uint8_t));
     lv_display_t *display;
     printf("UI_Thread start!\n");
 
     lv_init();
-    printf("lv_init OK!\n");
     lv_tick_set_cb(lvgl_tick_get);
 
     display = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
@@ -61,24 +65,25 @@ void ui_thread(void * ui_arg)
     lv_display_set_buffers(display, lvgl_draw_buffer, NULL, sizeof(lvgl_draw_buffer), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     lv_display_set_flush_cb(display, lvgl_flush);
-    printf("display init OK!\n");
 
     ch32v307_gc9a01_ui_init("");
-    printf("UI_init OK!\n");
 
     lv_screen_load(screen_main_create());
+    watch_clock_init();
 
     lv_obj_set_style_bg_color(
         lv_screen_active(),
         lv_color_hex(0x000000),
         LV_PART_MAIN
     );
+
+    xTaskCreate(key_event_task, "key_task", 256, NULL, configMAX_PRIORITIES - 3, &key_taskhandle);
     
     while(1)
     {
-        printf("UI while start!\n");
+        //printf("UI while start!\n");
         lv_timer_handler();
-        printf("lv_timer_handler start!\n");
+        //printf("lv_timer_handler start!\n");
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
