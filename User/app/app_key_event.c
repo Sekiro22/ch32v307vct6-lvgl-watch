@@ -3,6 +3,7 @@
 #include "queue.h"
 #include "key.h"
 #include "debug.h"
+#include "ui_thread.h"
 
 TaskHandle_t key_taskhandle;
 
@@ -17,10 +18,12 @@ void key_event_task(void * key_event_arg)
             if(key_num & KEY_PE1)
             {
                 printf("RET press\n");
+                xTaskNotify(ui_taskhandle, KEY_PE1, eSetBits);
             }
             if(key_num & KEY_PE2)
             {
                 printf("SET press\n");
+                xTaskNotify(ui_taskhandle, KEY_PE2, eSetBits);
             }
             if(key_num & KEY_PE3)
             {

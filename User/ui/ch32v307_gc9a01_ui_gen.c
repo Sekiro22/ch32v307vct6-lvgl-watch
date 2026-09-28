@@ -61,6 +61,12 @@ lv_font_t * font_data_10;
 extern lv_font_t font_data_10_data;
 lv_font_t * font_data_12;
 extern lv_font_t font_data_12_data;
+lv_font_t * font_menu_14;
+extern lv_font_t font_menu_14_data;
+lv_font_t * font_menu_16;
+extern lv_font_t font_menu_16_data;
+lv_font_t * font_menu_20;
+extern lv_font_t font_menu_20_data;
 
 /*----------------
  * Images
@@ -118,6 +124,24 @@ void ch32v307_gc9a01_ui_init_gen(const char * asset_path)
             font_data_12 = &font_data_12_data;
 
         }
+        if (!font_menu_14) {
+            /* font_menu_14 */
+            /* get font 'font_menu_14' from a C array */
+            font_menu_14 = &font_menu_14_data;
+
+        }
+        if (!font_menu_16) {
+            /* font_menu_16 */
+            /* get font 'font_menu_16' from a C array */
+            font_menu_16 = &font_menu_16_data;
+
+        }
+        if (!font_menu_20) {
+            /* font_menu_20 */
+            /* get font 'font_menu_20' from a C array */
+            font_menu_20 = &font_menu_20_data;
+
+        }
     }
     #endif
 
@@ -150,10 +174,16 @@ void ch32v307_gc9a01_ui_init_gen(const char * asset_path)
        defined in another from causing assertion failures during rendering of the Preview. */
     check_font(&font_data_10, "font_data_10");
     check_font(&font_data_12, "font_data_12");
+    check_font(&font_menu_14, "font_menu_14");
+    check_font(&font_menu_16, "font_menu_16");
+    check_font(&font_menu_20, "font_menu_20");
 
     /* Register fonts */
     lv_xml_register_font(NULL, "font_data_10", font_data_10);
     lv_xml_register_font(NULL, "font_data_12", font_data_12);
+    lv_xml_register_font(NULL, "font_menu_14", font_menu_14);
+    lv_xml_register_font(NULL, "font_menu_16", font_menu_16);
+    lv_xml_register_font(NULL, "font_menu_20", font_menu_20);
 
     /* Register subjects */
 

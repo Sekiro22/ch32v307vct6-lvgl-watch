@@ -16,8 +16,8 @@
 
 | 任务 | 创建位置 | 优先级 | 栈深度 | 主要职责 |
 | --- | --- | --- | --- | --- |
-| `UI_Thread` | `system_init()` | `configMAX_PRIORITIES - 4`，即 11 | 2048 个栈元素，约 8 KB | 初始化 LVGL、创建显示/UI、周期处理 LVGL |
-| `key_task` | `ui_thread()` | `configMAX_PRIORITIES - 3`，即 12 | 256 个栈元素 | 阻塞接收按键事件，目前只向串口打印按键名称 |
+| `UI_Thread` | `system_init()` | `configMAX_PRIORITIES - 4`，即 11 | 2048 个栈元素，约 8 KB | 初始化 LVGL、创建显示/UI、处理 SET/RET 通知并切屏、周期处理 LVGL |
+| `key_task` | `ui_thread()` | `configMAX_PRIORITIES - 3`，即 12 | 256 个栈元素 | 阻塞接收按键事件，打印按键名称；SET/RET 通过任务通知交给 UI 任务 |
 
 FreeRTOS 还会创建 Idle 任务；由于 `configUSE_TIMERS=1`，也会创建 Timer Service 任务，其优先级为 14、栈深度为 256 个栈元素。
 
@@ -29,7 +29,7 @@ FreeRTOS 还会创建 Idle 任务；由于 `configUSE_TIMERS=1`，也会创建 T
 
 按键使用内部上拉，按下为低电平；`KEY_GetState()` 返回按下状态位，bit 0～5 分别对应 PE1～PE6。回调运行于 Timer Service 任务，队列发送不等待；队列满时本次按下事件会丢失。
 
-`key_queue` 在 UI 任务中创建，容量为 3 个 `uint8_t` 消息；扫描定时器每 20 ms 采样一次，连续两次结果相同才确认状态变化。`key_task` 不调用 LVGL；一级菜单如由按键驱动，应在 UI 任务中消费事件或转交 UI 消息，避免跨任务直接操作界面。
+`key_queue` 在 UI 任务中创建，容量为 3 个 `uint8_t` 消息；扫描定时器每 20 ms 采样一次，连续两次结果相同才确认状态变化。`key_task` 收到 PE2/SET 或 PE1/RET 后，用 `eSetBits` 任务通知 UI 任务；UI 任务在表盘按 SET 时创建并加载菜单，在菜单按 RET 时返回缓存的表盘屏幕。其余按键当前仍只打印，不调用 LVGL。
 
 表针使用 LVGL 定时器（非 FreeRTOS 软件定时器）每 1000 ms 在 UI 任务中读取 `RTC_GetCounter()` 并更新三根 Line；它不需要 RTC 秒中断。
 
@@ -37,6 +37,7 @@ FreeRTOS 还会创建 Idle 任务；由于 `configUSE_TIMERS=1`，也会创建 T
 
 ```text
 初始化 LVGL 和屏幕
+  -> 检查 SET/RET 任务通知并切换屏幕
   -> lv_timer_handler()
   -> vTaskDelay(pdMS_TO_TICKS(2))
   -> 重复

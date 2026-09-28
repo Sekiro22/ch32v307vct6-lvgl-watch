@@ -79,6 +79,9 @@ bool ch32v307_gc9a01_ui_check_target(uint32_t target);
 /* Targets: any */
 extern lv_font_t * font_data_10;
 extern lv_font_t * font_data_12;
+extern lv_font_t * font_menu_14;
+extern lv_font_t * font_menu_16;
+extern lv_font_t * font_menu_20;
 
 
 /*----------------
@@ -115,6 +118,7 @@ void ch32v307_gc9a01_ui_init_gen(const char * asset_path);
 
 /*Include all the widgets, components and screens of this library*/
 #include "screens/screen_main_gen.h"
+#include "screens/screen_menu_gen.h"
 
 #ifdef __cplusplus
 } /*extern "C"*/

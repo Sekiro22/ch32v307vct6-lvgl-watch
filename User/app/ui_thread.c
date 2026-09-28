@@ -54,6 +54,8 @@ void ui_thread(void * ui_arg)
     KEY_Init();
     key_queue = xQueueCreate(3, sizeof(uint8_t));
     lv_display_t *display;
+    lv_obj_t *watch_screen;
+    lv_obj_t *menu_screen = NULL;
     printf("UI_Thread start!\n");
 
     lv_init();
@@ -68,7 +70,8 @@ void ui_thread(void * ui_arg)
 
     ch32v307_gc9a01_ui_init("");
 
-    lv_screen_load(screen_main_create());
+    watch_screen = screen_main_create();
+    lv_screen_load(watch_screen);
     watch_clock_init();
 
     lv_obj_set_style_bg_color(
@@ -82,6 +85,22 @@ void ui_thread(void * ui_arg)
     while(1)
     {
         //printf("UI while start!\n");
+        uint32_t keys;
+
+        if(xTaskNotifyWait(0, KEY_PE1 | KEY_PE2, &keys, 0) == pdTRUE)
+        {
+            if(lv_screen_active() == watch_screen && (keys & KEY_PE2))
+            {
+                if(menu_screen == NULL)
+                    menu_screen = screen_menu_create();
+
+                lv_screen_load(menu_screen);
+            }
+            else if(lv_screen_active() == menu_screen && (keys & KEY_PE1))
+            {
+                lv_screen_load(watch_screen);
+            }
+        }
         lv_timer_handler();
         //printf("lv_timer_handler start!\n");
         vTaskDelay(pdMS_TO_TICKS(2));
